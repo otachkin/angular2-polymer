@@ -1,4 +1,6 @@
-System.register(['@angular/core', '@angular/common'], function(exports_1) {
+System.register(['@angular/core', '@angular/common'], function(exports_1, context_1) {
+    "use strict";
+    var __moduleName = context_1 && context_1.id;
     var core_1, common_1;
     function PolymerElement(name) {
         var propertiesWithNotify = [];
@@ -124,11 +126,21 @@ System.register(['@angular/core', '@angular/common'], function(exports_1) {
                 var target = event.target;
                 if (this[property] !== target[property]) {
                     this[property] = target[property];
-                    this._differs[property] = this._createDiffer(this[property]);
+                    this._createDiffersForProperty(property);
                 }
             },
-            _createDiffer: function (value) {
-                var differ = Array.isArray(value) ? this._iterableDiffers.find(value).create(null) : this._keyValueDiffers.find(value || {}).create(null);
+            _createDiffersForProperty: function (property) {
+                var fact = this._keyValueDiffers;
+                var value = this[property];
+                if (Array.isArray(value)) {
+                    // Observe first level objects in the array
+                    var diffArr = this._differs[property + 'Array'] = [];
+                    value.forEach(function (val) {
+                        diffArr.push(fact.find(val).create(null));
+                    });
+                    fact = this._iterableDiffers;
+                }
+                var differ = this._differs[property] = fact.find(value || {}).create(null);
                 // initial diff with the current value to make sure the differ is synced
                 // and doesn't report any outdated changes on the next ngDoCheck call.
                 differ.diff(value);
@@ -140,6 +152,7 @@ System.register(['@angular/core', '@angular/common'], function(exports_1) {
                     diff.forEachRemovedItem(function (item) { return _this._notifyArray(property, item.previousIndex); });
                     diff.forEachAddedItem(function (item) { return _this._notifyArray(property, item.currentIndex); });
                     diff.forEachMovedItem(function (item) { return _this._notifyArray(property, item.currentIndex); });
+                    this._createDiffersForProperty(property);
                 }
             },
             _handleObjectDiffs: function (property, diff) {
@@ -162,14 +175,21 @@ System.register(['@angular/core', '@angular/common'], function(exports_1) {
                 arrayAndObjectProperties.forEach(function (property) {
                     var elm = _this._element;
                     var _differs = _this._differs;
-                    if (elm[property] !== _this[property]) {
-                        elm[property] = _this[property];
-                        _differs[property] = _this._createDiffer(_this[property]);
+                    var value = _this[property];
+                    if (elm[property] !== value) {
+                        _this._notifyPath(property, value);
+                        _this._createDiffersForProperty(property);
                     }
                     else if (_differs[property]) {
-                        // TODO: these differs won't pickup any changes in need properties like items[0].foo
-                        var diff = _differs[property].diff(_this[property]);
-                        if (diff instanceof core_1.DefaultIterableDiffer) {
+                        var diff = _differs[property].diff(value);
+                        if (diff == null) {
+                            var diffArr = _this._differs[property + 'Array'];
+                            for (var i = 0; diffArr && i < diffArr.length; i++) {
+                                diff = diffArr[i].diff(_this[property][i]);
+                                _this._handleObjectDiffs(property + '.' + i, diff);
+                            }
+                        }
+                        else if (diff instanceof core_1.DefaultIterableDiffer) {
                             _this._handleArrayDiffs(property, diff);
                         }
                         else {

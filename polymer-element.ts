@@ -132,6 +132,7 @@ export function PolymerElement(name: any) {
       this._element = el.nativeElement;
       this._iterableDiffers = iterableDiffers;
       this._keyValueDiffers = keyValueDiffers;
+
       this._differs = {};
       this._arrayDiffs = {};
     }],
@@ -152,17 +153,27 @@ export function PolymerElement(name: any) {
         var target:any = event.target;
         if (this[property] !== target[property]) {
           this[property] = target[property];
-          (<any>this)._differs[property] = this._createDiffer(this[property]);
+          this._createDiffersForProperty(property);
         }
     },
 
-    _createDiffer(value: string) {
-      var differ = Array.isArray(value) ? (<any>(<any>this)._iterableDiffers).find(value).create(null) : (<any>(<any>this)._keyValueDiffers).find(value || {}).create(null);
+    _createDiffersForProperty(property: string) {
+      var fact = (<any>(<any>this)._keyValueDiffers);
+      var value = this[property];
+      if (Array.isArray(value)) {
 
+        // Observe first level objects in the array
+        var diffArr: any[] = (<any>this)._differs[property + 'Array'] = [];
+        value.forEach((val: any) => {
+          diffArr.push(fact.find(val).create(null))
+        });
+
+        fact = (<any>(<any>this)._iterableDiffers);
+      }
+      var differ = (<any>this)._differs[property] = fact.find(value || {}).create(null);
       // initial diff with the current value to make sure the differ is synced
       // and doesn't report any outdated changes on the next ngDoCheck call.
       differ.diff(value);
-
       return differ;
     },
 
@@ -171,6 +182,7 @@ export function PolymerElement(name: any) {
         diff.forEachRemovedItem((item: any) => this._notifyArray(property, item.previousIndex));
         diff.forEachAddedItem((item: any) => this._notifyArray(property, item.currentIndex));
         diff.forEachMovedItem((item: any) => this._notifyArray(property, item.currentIndex));
+        this._createDiffersForProperty(property);
       }
     },
 
@@ -195,14 +207,19 @@ export function PolymerElement(name: any) {
       arrayAndObjectProperties.forEach(property => {
         var elm = (<any>this)._element;
         var _differs = (<any>this)._differs;
-        if (elm[property] !== this[property]) {
-          elm[property] = this[property];
-          _differs[property] = this._createDiffer(this[property]);
+        var value = this[property];
+        if (elm[property] !== value) {
+          this._notifyPath(property, value);
+          this._createDiffersForProperty(property);
         } else if (_differs[property]) {
-
-          // TODO: these differs won't pickup any changes in need properties like items[0].foo
-          var diff = _differs[property].diff(this[property]);
-          if (diff instanceof DefaultIterableDiffer) {
+          var diff = _differs[property].diff(value);
+          if (diff == null) {
+            var diffArr = (<any>this)._differs[property + 'Array'];
+            for (var i = 0 ; diffArr && i < diffArr.length; i++) {
+                diff = diffArr[i].diff(this[property][i]);
+                this._handleObjectDiffs(property + '.' + i, diff);
+            }
+          } else if (diff instanceof DefaultIterableDiffer) {
             this._handleArrayDiffs(property, diff);
           } else {
             this._handleObjectDiffs(property, diff);
