@@ -18,15 +18,9 @@
     "tests"
   ],
   "devDependencies": {
-    "paper-elements": "PolymerElements/paper-elements#^1.0.7",
     "iron-elements": "PolymerElements/iron-elements#^1.0.10",
-    "vaadin-grid": "Vaadin/vaadin-grid#^1.1.0",
-    "vaadin-combo-box": "Vaadin/vaadin-combo-box#^1.1.0",
-    "vaadin-date-picker": "Vaadin/vaadin-date-picker#^1.1.0",
-    "vaadin-upload": "Vaadin/vaadin-upload#^1.1.0",
-    "vaadin-charts": "Vaadin/vaadin-charts#private-chart"
-  },
-  "dependencies": {
-    "vaadin-icons": "vaadin/vaadin-icons#^1.0.0"
+    "paper-elements": "PolymerElements/paper-elements#^1.0.7",
+    "vaadin-core-elements": "vaadin/vaadin-core-elements#master",
+    "vaadin-charts": "vaadin/vaadin-charts#private-chart"
   }
 }
