@@ -3,8 +3,16 @@ describe,
 expect,
 it,
 inject,
-setBaseTestProviders
+setBaseTestProviders,
+beforeEachProviders
 } from '@angular/core/testing';
+import {
+  disableDeprecatedForms,
+  provideForms,
+  FormControl,
+  FormGroup,
+  REACTIVE_FORM_DIRECTIVES
+} from '@angular/forms';
 import { PolymerElement } from './polymer-element';
 import { TestComponentBuilder, ComponentFixture} from '@angular/compiler/testing';
 import { Component } from '@angular/core';
@@ -28,6 +36,9 @@ describe('PolymerElement', () => {
   var testElement: any;
   var testComponent: TestComponent;
   var fixture: ComponentFixture<any>;
+
+  // Enable new Angular 2 forms module.
+  beforeEachProviders(() => [ disableDeprecatedForms(), provideForms() ]);
 
   it('is defined', () => {
     expect(PolymerElement).toBeDefined();
@@ -110,18 +121,20 @@ describe('PolymerElement', () => {
 
   describe('Form field', () => {
 
-    var form: ControlGroup;
+    var form: FormGroup;
 
     beforeAll(() => {
       template = `
-        <form [ngFormModel]="form">
-          <test-element ngControl="value" required></test-element>
+        <form [formGroup]="form">
+          <test-element [(ngModel)]="value" name="value" required></test-element>
         </form>
         `;
     });
 
     beforeEach(() => {
-      form = new ControlGroup({ "value": new Control() });
+      form = new FormGroup({
+        value: new FormControl()
+      });
       fixture.debugElement.componentInstance.form = form;
       fixture.detectChanges();
     });
@@ -304,7 +317,7 @@ describe('PolymerElement', () => {
 @Component({
   selector: 'test-component',
   template: ``,
-  directives: [PolymerElement('test-element')]
+  directives: [PolymerElement('test-element'), REACTIVE_FORM_DIRECTIVES]
 })
 class TestComponent {
 

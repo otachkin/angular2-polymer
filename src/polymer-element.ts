@@ -11,7 +11,7 @@ import {
   IterableDiffers,
   DefaultIterableDiffer
 } from '@angular/core';
-import { NgControl, NG_VALUE_ACCESSOR, ControlValueAccessor } from '@angular/common';
+import { NgControl, NG_VALUE_ACCESSOR, ControlValueAccessor } from '@angular/forms';
 
 import { BrowserDomAdapter } from '@angular/platform-browser/src/browser/browser_adapter';
 import { __platform_browser_private__ } from '@angular/platform-browser';
