@@ -4,21 +4,6 @@
   "description": "Angular 2 support for Polymer elements",
   "repository": "https://github.com/vaadin/angular2-polymer.git",
   "main": "index.js",
-  "scripts": {
-    "test": "tsc && concurrently \"npm run tsc:w\" \"live-server --open=tests.html\"",
-    "typings": "typings",
-    "tsc": "tsc",
-    "tsc:w": "tsc -w",
-    "prepublish": "typings install && tsc"
-  },
-  "files": [
-    "index.d.ts",
-    "src/*.js",
-    "src/*.d.ts"
-  ],
-  "typescript": {
-    "definition": "index.d.ts"
-  },
   "author": "Vaadin Ltd",
   "license": "Apache-2.0",
   "dependencies": {
